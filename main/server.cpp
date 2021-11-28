@@ -174,7 +174,7 @@ int main(int argc , char *argv[]){
                         for(int i = 0; i < MAX_FILENAME; i++)
                             filename[i] = Buf[i+4];
                         printf("file name = [%s]\n", filename);
-                        rec_file(sd, filename, SERVER);
+                        recv_file(sd, filename, SERVER);
                     }
 
                     close(sd);

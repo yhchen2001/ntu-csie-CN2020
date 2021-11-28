@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             //printf("ls %d bytes written, Instruction sent successfully\n", write_stat);
-            rec_ls(localSocket);
+            recv_ls(localSocket);
         }
         else if(ins[0] == 'g' && ins[1] == 'e' && ins[2] == 't' && (ins[3] == '\0' || ins[3] == ' '))
         {
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
             //printf("exist msg [%s]\n", check_exist);
             if(check_exist[0] == FILE_EXIST)
             {
-                rec_file(localSocket, filename, CLIENT);
+                recv_file(localSocket, filename, CLIENT);
                 printf("get %s successfully\n", filename);
             }
             else if(check_exist[0] == FILE_NOT_EXIST)
