@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros 
+#include <sys/time.h> 
 #include <errno.h> 
 #include <string>
 #include "lib.hpp"
@@ -25,96 +25,88 @@ int main(int argc , char *argv[]){
         perror("sigaction");
         exit(1);
     }
-    mkdir("./server_f", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir("./server_dir", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     char Buf[BUFF_SIZE];//Buf用來存放read到的資料
     char filenm[BUFF_SIZE];//fike name buffer
     char name_map[MAX_CLIENT][MAX_NAME] = {'\0'};
     FILE *fp;
 
-    int localSocket, remoteSocket;// local: server, remote: client                            
+    int mainSocket, clientSocket;                          
     
     string port_stg = argv[1];
     int port = atoi(port_stg.c_str());
     printf("Get port number: %d\n",port);
-    //int port = 8888;
-    struct  sockaddr_in localAddr,remoteAddr;
+    struct  sockaddr_in mainAddr,remoteAddr;
     int addrLen = sizeof(struct sockaddr_in);  
     
-    //(localSocket = socket(AF_INET , SOCK_STREAM , 0));
-    if ((localSocket = socket(AF_INET , SOCK_STREAM , 0)) < 0){
+    if ((mainSocket = socket(AF_INET , SOCK_STREAM , 0)) < 0){
         perror("socket create error!");
         exit(1);
     }
     printf("Server socket creation successful.\n");
 
-    localAddr.sin_family = AF_INET;
-    localAddr.sin_port = htons(port);
-    localAddr.sin_addr.s_addr = INADDR_ANY;
+    mainAddr.sin_family = AF_INET;
+    mainAddr.sin_port = htons(port);
+    mainAddr.sin_addr.s_addr = INADDR_ANY;
 
-    if(bind(localSocket,(struct sockaddr *)&localAddr , sizeof(localAddr)) < 0) {
-        perror("Bind error!");
+    if(bind(mainSocket,(struct sockaddr *)&mainAddr , sizeof(mainAddr)) < 0) {
+        perror("Bindint error!");
         exit(1);
     }
-    printf("Binding successful.\n");
 
-    if(listen(localSocket , 3) < 0){
-    	perror("Listen error");
+    if(listen(mainSocket , 3) < 0){
+    	perror("Listenint error");
     	exit(1);
     }
 
-    // select_1: start
-    int client_socket[MAX_CLIENT];
+    int client_fd[MAX_CLIENT];
     fd_set readfds;
     for(int i = 0; i < MAX_CLIENT; i++)
-        client_socket[i] = 0;
-    int sd;
-
+        client_fd[i] = 0;
 
     while(1){ 
-        printf("Waiting for connections...\n"); 
-        printf("Server Port: %d\n", port);
+        printf("Waiting for connections...\n");
 
         FD_ZERO(&readfds);
-        FD_SET(localSocket, &readfds);
-        int max_sd = localSocket;
-        printf("max_sd = %d\n", max_sd);
+        FD_SET(mainSocket, &readfds);
+        int max_fd = mainSocket;
+        printf("max_fd = %d\n", max_fd);
 
         for(int i = 0;  i< MAX_CLIENT; i++){
-            if(client_socket[i] > 0)
-                FD_SET(client_socket[i], &readfds);
-            if(client_socket[i] > max_sd)
-                max_sd = client_socket[i];
+            if(client_fd[i] > 0)
+                FD_SET(client_fd[i], &readfds);
+            if(client_fd[i] > max_fd)
+                max_fd = client_fd[i];
         }
 
-        int select_stat = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+        int select_stat = select(max_fd + 1, &readfds, NULL, NULL, NULL);
         if ((select_stat  < 0) && (errno != EINTR)) { 
             printf("select error\n"); 
         } 
 
-        if (FD_ISSET(localSocket, &readfds)){ 
-            if ((remoteSocket = accept(localSocket, (struct sockaddr *)&remoteAddr, (socklen_t*)&addrLen)) < 0) {
+        if (FD_ISSET(mainSocket, &readfds)){ 
+            if ((clientSocket = accept(mainSocket, (struct sockaddr *)&remoteAddr, (socklen_t*)&addrLen)) < 0) {
                 perror("Accept error");
                 exit(1);
             }
-            printf("Connection accepted.\n");
-             
+            printf("Accept ok.\n");
+
             for(int i = 0; i < MAX_CLIENT; i++){
-                if(client_socket[i] == 0){
-                    client_socket[i] = remoteSocket;
-                    printf("Adding to socket list : %d\n" , i);
+                if(client_fd[i] == 0){
+                    client_fd[i] = clientSocket;
                     break;
                 }
             }  
         } 
 
         for(int i = 0; i < MAX_CLIENT; i++){
-            sd = client_socket[i];
-            if(FD_ISSET(sd, &readfds) ){
+            int crr_fd = client_fd[i];
+            if(FD_ISSET(crr_fd, &readfds) ){
                 bzero(Buf, sizeof(char)* BUFF_SIZE); 
                 printf("Reading instruction...\n");
 
-                if ((read(sd, Buf, BUFF_SIZE)) < 0) {
+                if ((read(crr_fd, Buf, BUFF_SIZE)) < 0) {
                     perror("Read instruction error.");
                     exit (1);
                 }                
@@ -126,31 +118,31 @@ int main(int argc , char *argv[]){
                         new_name[off] = Buf[off];
                     printf("Name = %s\n", new_name);
 
-                    if(check_name(name_map, new_name, client_socket, sd) == REPEAT){
+                    if(check_name(name_map, new_name, client_fd, crr_fd) == REPEAT){
                         printf("same name\n");
-                        if ((write(sd, naming_fail, BUFF_SIZE)) < 0) {
+                        if ((write(crr_fd, naming_fail, BUFF_SIZE)) < 0) {
                             perror("writing naming fail error.");
                             exit (1);
                         }
                     }
                     else{
                         printf("naming success\n");
-                        if ((write(sd, naming_ok, BUFF_SIZE)) < 0) {
+                        if ((write(crr_fd, naming_ok, BUFF_SIZE)) < 0) {
                             perror("writing naming ok error.");
                             exit (1);
                         }
                         for(int off = 0; off < NAME_MAX; off++)
                             name_map[i][off] = new_name[off];
                     }
-                    close(sd);
-                    client_socket[i] = 0;
+                    close(crr_fd);
+                    client_fd[i] = 0;
                 }
                 else{
                     printf("Instruction: %s\n", Buf);
                     // ls
                     if(Buf[0] == 'l' && Buf[1] == 's')
                     { 
-                        list_file(sd);
+                        list_file(crr_fd);
                     }
                     else if(Buf[0] == 'g' && Buf[1] == 'e' && Buf[2] == 't')
                     {
@@ -162,9 +154,9 @@ int main(int argc , char *argv[]){
                         char exist_msg[BUFF_SIZE] = {'\0'};
                         set_exist_msg(filename, exist_msg, SERVER);
 
-                        write(sd, exist_msg, BUFF_SIZE);  
+                        write(crr_fd, exist_msg, BUFF_SIZE);  
                         if(exist_msg[0] == '1')
-                            send_file(filename, sd, SERVER);        
+                            send_file(filename, crr_fd, SERVER);        
                     }
                     else if(Buf[0] == 'p' && Buf[1] == 'u' && Buf[2] == 't')
                     {
@@ -172,15 +164,15 @@ int main(int argc , char *argv[]){
                         for(int i = 0; i < MAX_FILENAME; i++)
                             filename[i] = Buf[i+4];
                         printf("file name = [%s]\n", filename);
-                        recv_file(sd, filename, SERVER);
+                        recv_file(crr_fd, filename, SERVER);
                     }
 
-                    close(sd);
-                    client_socket[i] = 0;
+                    close(crr_fd);
+                    client_fd[i] = 0;
                 } 
             }
         }
 	}
-    close(localSocket);
+    close(mainSocket);
     return 0;
 }

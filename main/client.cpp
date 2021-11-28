@@ -17,7 +17,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    mkdir("./client_f", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir("./client_dir", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     char instruction[BUFF_SIZE];
     char Buf[BUFF_SIZE];
@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
         port = port * 10 + (ip_port[idx] - '0');
         idx++;
     }
-    //cout << "ip = " << ip << ", port = " << port << endl;
 
     bool name_entered = false;
     char name[BUFF_SIZE] = {'\0'};
@@ -57,7 +56,7 @@ int main(int argc, char *argv[])
 
         /* Bind to an arbitrary return address.*/
         struct sockaddr_in localAddr;
-        bzero(&localAddr, sizeof(localAddr)); // #include <string.h>，將為sizeof(x)的前幾個東西清成0
+        bzero(&localAddr, sizeof(localAddr));
 
         localAddr.sin_family = PF_INET;
         localAddr.sin_port = htons(port);
@@ -198,9 +197,6 @@ int main(int argc, char *argv[])
             printf("Command not found\n");
         }
 
-        //printf("local socket closing\n");
         close(localSocket);
-        //sleep(1);
-
     }
 }

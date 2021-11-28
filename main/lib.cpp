@@ -43,13 +43,13 @@ bool check_name(char name_map[][MAX_NAME], char new_name[], int client_socket[],
 
 void list_file(int remoteSocket){
     int sent;
-    DIR *d = opendir("./server_f");// opendir() returns a pointer of DIR type
-    struct dirent *dir;// Pointer for directory entry
+    DIR *d = opendir("./server_dir");
+    struct dirent *file_under_dir;
     vector<string> files;
     if(d){
-        while((dir = readdir(d)) != NULL){
+        while((file_under_dir = readdir(d)) != NULL){
             char Buf[BUFF_SIZE] = {'\0'};
-            strcpy(Buf, dir->d_name);
+            strcpy(Buf, file_under_dir->d_name);
             if(Buf[0] == '.')  
                 continue;
             Buf[strlen(Buf)] = '\0';
@@ -76,17 +76,17 @@ void list_file(int remoteSocket){
 }
 
 
-void set_exist_msg(char filenm[], char exist_msg[], int type){
+void set_exist_msg(char filename[], char exist_msg[], int type){
     DIR *d; 
     if(type == SERVER)
-        d = opendir("./server_f");
+        d = opendir("./server_dir");
     else if(type == CLIENT)
-        d = opendir("./client_f");
+        d = opendir("./client_dir");
     struct dirent *dir;
     if(d){
         while((dir = readdir(d)) != NULL){
-            if(strcmp(filenm, dir->d_name) == 0){
-                //printf("Finded out the file, file name: %s\n", filenm);
+            if(strcmp(filename, dir->d_name) == 0){
+                //printf("Finded out the file, file name: %s\n", filename);
                 exist_msg[0] = '1';
                 return;
             }
@@ -103,9 +103,9 @@ void send_file(char filename[], int remoteSocket, int type){
     string str_1;
 
     if(type == CLIENT)
-        str_1 = "./client_f/";
+        str_1 = "./client_dir/";
     else if(type == SERVER)
-        str_1 = "./server_f/";
+        str_1 = "./server_dir/";
 
     string str_2 = filename;
     string str_3 = str_1 + str_2;
@@ -124,9 +124,9 @@ void recv_file(int remoteSocket,char filename[], int type){
     FILE *fp;
     string str_1;
     if(type == CLIENT)
-        str_1 = "./client_f/";
+        str_1 = "./client_dir/";
     else if(type == SERVER)
-        str_1 = "./server_f/";
+        str_1 = "./server_dir/";
 
     string str_2 = filename;
     string str_3 = str_1 + str_2;
