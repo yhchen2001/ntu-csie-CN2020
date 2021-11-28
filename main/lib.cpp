@@ -12,6 +12,8 @@
 #include <string>
 #include "lib.hpp"
 #include <vector>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 using namespace std;
 
@@ -20,7 +22,11 @@ bool check_name(char name_map[][MAX_NAME], char new_name[], int client_socket[],
     bool tot_same = false;
     for(int i = 0; i < MAX_CLIENT; i++)
     {
-        if(client_socket[i] == 0 || client_socket[i] == sd)
+        int optval;
+        socklen_t optlen = sizeof(optval);
+        int get_socket_stat = getsockopt(sd, SOL_SOCKET, SO_TYPE, &optval, &optlen);
+
+        if(client_socket[i] == 0 || client_socket[i] == sd || get_socket_stat == -1)
             continue;
         bool crr_same = true;
         for(int j = 0; j < MAX_NAME; j++)
@@ -117,7 +123,6 @@ void send_file(char filename[], int remoteSocket, int type){
 void recv_file(int remoteSocket,char filename[], int type){
     FILE *fp;
     string str_1;
-
     if(type == CLIENT)
         str_1 = "./client_f/";
     else if(type == SERVER)

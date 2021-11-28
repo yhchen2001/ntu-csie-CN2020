@@ -91,16 +91,14 @@ int main(int argc , char *argv[]){
         if ((select_stat  < 0) && (errno != EINTR)) { 
             printf("select error\n"); 
         } 
-        //If something happened on the master socket , 
-        //then its an incoming connection 
+
         if (FD_ISSET(localSocket, &readfds)){ 
-            //remoteSocket = accept(localSocket, (struct sockaddr *)&remoteAddr, (socklen_t*)&addrLen);  
             if ((remoteSocket = accept(localSocket, (struct sockaddr *)&remoteAddr, (socklen_t*)&addrLen)) < 0) {
                 perror("Accept error");
                 exit(1);
             }
             printf("Connection accepted.\n");
-            //add new socket to array of sockets 
+             
             for(int i = 0; i < MAX_CLIENT; i++){
                 if(client_socket[i] == 0){
                     client_socket[i] = remoteSocket;
