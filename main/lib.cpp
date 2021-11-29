@@ -42,7 +42,6 @@ bool check_name(char name_map[][MAX_NAME], char new_name[], int client_socket[],
 }
 
 void list_file(int remoteSocket){
-    int sent;
     DIR *d = opendir("./server_dir");
     struct dirent *file_under_dir;
     vector<string> files;
@@ -61,7 +60,8 @@ void list_file(int remoteSocket){
 
     sort(files.begin(), files.end());
 
-    for(auto s: files){
+    for(int i = 0; i < files.size(); i++){
+        string s = files[i];
         char Buf[BUFF_SIZE] = {'\0'};
         strcpy(Buf, s.c_str());
         cout << s << endl;
@@ -86,7 +86,6 @@ void set_exist_msg(char filename[], char exist_msg[], int type){
     if(d){
         while((dir = readdir(d)) != NULL){
             if(strcmp(filename, dir->d_name) == 0){
-                //printf("Finded out the file, file name: %s\n", filename);
                 exist_msg[0] = '1';
                 return;
             }
@@ -95,54 +94,53 @@ void set_exist_msg(char filename[], char exist_msg[], int type){
     }
 
     exist_msg[0] = '0';
-    //printf("exist[0] = %c, Finding file failed.\n",exist_msg[0]);
 }
 
 void send_file(char filename[], int remoteSocket, int type){
-    FILE *fp;
-    string str_1;
-
+    string dir_name;
     if(type == CLIENT)
-        str_1 = "./client_dir/";
+        dir_name = "./client_dir/";
     else if(type == SERVER)
-        str_1 = "./server_dir/";
+        dir_name = "./server_dir/";
 
-    string str_2 = filename;
-    string str_3 = str_1 + str_2;
-    fp = fopen(str_3.c_str(), "rb");
+    string filename_str = filename;
+    string path_name = dir_name + filename_str;
+    FILE *fp; 
+
+    if ((fp = fopen(path_name.c_str(), "rb")) == NULL){
+        perror("fopen error");
+        exit(1);
+    }
     
     while(!feof(fp)){
         char Buf[BUFF_SIZE] = {'\0'};
         int numbytes = fread(Buf, sizeof(char), sizeof(Buf), fp);
-        //printf("fread %d bytes, ", numbytes);
         numbytes = write(remoteSocket, Buf, BUFF_SIZE);
-        //printf("Sending %d bytes\n",numbytes);
     }
 }
 
 void recv_file(int remoteSocket,char filename[], int type){
-    FILE *fp;
-    string str_1;
-    if(type == CLIENT)
-        str_1 = "./client_dir/";
-    else if(type == SERVER)
-        str_1 = "./server_dir/";
 
-    string str_2 = filename;
-    string str_3 = str_1 + str_2;
-    if ((fp = fopen(str_3.c_str(), "wb")) == NULL){
+    string dir_name;
+    if(type == CLIENT)
+        dir_name = "./client_dir/";
+    else if(type == SERVER)
+        dir_name = "./server_dir/";
+    string filename_str = filename;
+    string path_name = dir_name + filename_str;
+
+    FILE *fp;
+    if ((fp = fopen(path_name.c_str(), "wb")) == NULL){
         perror("fopen error");
         exit(1);
     }
     while(1){
         char Buf[BUFF_SIZE] = {'\0'};
         int numbytes = read(remoteSocket, Buf, BUFF_SIZE);
-        //printf("read %d bytes, ", numbytes);
         if(numbytes <= 0){
             break;
         }
         numbytes = fwrite(Buf, sizeof(char), numbytes, fp);
-        //printf("fwrite %d bytes\n", numbytes);
     }
     fclose(fp);
 }
@@ -157,7 +155,6 @@ void recv_ls(int localSocket){
         }
         printf("%s\n", Buf);
     }
-    //printf("end ls\n");
 }
 
 bool file_ok(char filename[])

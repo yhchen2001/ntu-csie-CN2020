@@ -28,7 +28,6 @@ int main(int argc , char *argv[]){
     mkdir("./server_dir", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     char Buf[BUFF_SIZE];//Buf用來存放read到的資料
-    char filenm[BUFF_SIZE];//fike name buffer
     char name_map[MAX_CLIENT][MAX_NAME] = {'\0'};
     FILE *fp;
 
@@ -56,7 +55,7 @@ int main(int argc , char *argv[]){
     }
 
     if(listen(mainSocket , 3) < 0){
-    	perror("Listenint error");
+    	perror("Listening error");
     	exit(1);
     }
 
@@ -66,12 +65,11 @@ int main(int argc , char *argv[]){
         client_fd[i] = 0;
 
     while(1){ 
-        printf("Waiting for connections...\n");
 
         FD_ZERO(&readfds);
         FD_SET(mainSocket, &readfds);
         int max_fd = mainSocket;
-        printf("max_fd = %d\n", max_fd);
+        //printf("max_fd = %d\n", max_fd);
 
         for(int i = 0;  i< MAX_CLIENT; i++){
             if(client_fd[i] > 0)
@@ -103,9 +101,7 @@ int main(int argc , char *argv[]){
         for(int i = 0; i < MAX_CLIENT; i++){
             int crr_fd = client_fd[i];
             if(FD_ISSET(crr_fd, &readfds) ){
-                bzero(Buf, sizeof(char)* BUFF_SIZE); 
-                printf("Reading instruction...\n");
-
+                memset(Buf, '\0', BUFF_SIZE); 
                 if ((read(crr_fd, Buf, BUFF_SIZE)) < 0) {
                     perror("Read instruction error.");
                     exit (1);

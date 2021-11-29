@@ -46,24 +46,22 @@ int main(int argc, char *argv[])
     bool first_time = true;
 
     while(1){
-        int localSocket, recved;
-        localSocket = socket(AF_INET, SOCK_STREAM, 0);
-        if (localSocket < 0)
+        int mainSocket;
+        mainSocket = socket(AF_INET, SOCK_STREAM, 0);
+        if (mainSocket < 0)
         {
             perror("Create socket failed.");
             exit(1);
         }
 
-        /* Bind to an arbitrary return address.*/
-        struct sockaddr_in localAddr;
-        bzero(&localAddr, sizeof(localAddr));
+        struct sockaddr_in mainAddr;
+        bzero(&mainAddr, sizeof(mainAddr));
 
-        localAddr.sin_family = PF_INET;
-        localAddr.sin_port = htons(port);
-        localAddr.sin_addr.s_addr = inet_addr(ip);
+        mainAddr.sin_family = PF_INET;
+        mainAddr.sin_port = htons(port);
+        mainAddr.sin_addr.s_addr = inet_addr(ip);
 
-        //Connect to the server連線
-        if (connect(localSocket, (struct sockaddr *)&localAddr, sizeof(localAddr)) < 0)
+        if (connect(mainSocket, (struct sockaddr *)&mainAddr, sizeof(mainAddr)) < 0)
         {
             perror("Connection failed.");
             exit(1);
@@ -80,18 +78,18 @@ int main(int argc, char *argv[])
 
             if(name[MAX_NAME] != '\0'){
                 printf("%s is too long\n", name);
-                close(localSocket);
+                close(mainSocket);
                 continue;
             }
             name[BUFF_SIZE-1] = NONAME;
-            if (write(localSocket, name, BUFF_SIZE) < 0)
+            if (write(mainSocket, name, BUFF_SIZE) < 0)
             {
                 perror("Write name msg error");
                 exit(1);
             }
             // 這邊socket會確定name有沒有被用掉，如果沒被用掉就會傳 naming_success
             char check_naming[BUFF_SIZE] = {'\0'};
-            read(localSocket, check_naming, BUFF_SIZE);
+            read(mainSocket, check_naming, BUFF_SIZE);
 
             if(check_naming[0] == NAMING_FAIL){
                 printf("username is in used, please try another:\n");
@@ -101,7 +99,7 @@ int main(int argc, char *argv[])
                 name_entered = true;
                 printf("connect successfully\n");
             }
-            close(localSocket);
+            close(mainSocket);
             continue;
         }
 
@@ -111,7 +109,7 @@ int main(int argc, char *argv[])
         //printf("ins[0] == '0' == %d\n", ins[0] == '\0');
         if(ins[0] == '\0')
         {
-            close(localSocket);
+            close(mainSocket);
             continue;
         }
         //printf("Your instruction is %s\n", ins);
@@ -129,13 +127,13 @@ int main(int argc, char *argv[])
                 }
             }
             int write_stat;
-            if ((write_stat = write(localSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
+            if ((write_stat = write(mainSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
             {
                 perror("Write Instruction error");
                 exit(1);
             }
             //printf("ls %d bytes written, Instruction sent successfully\n", write_stat);
-            recv_ls(localSocket);
+            recv_ls(mainSocket);
         }
         else if(ins[0] == 'g' && ins[1] == 'e' && ins[2] == 't' && (ins[3] == '\0' || ins[3] == ' '))
         {
@@ -146,18 +144,18 @@ int main(int argc, char *argv[])
 
             if(file_ok(filename) == false){
                 printf("Command format error\n");
-                close(localSocket);
+                close(mainSocket);
                 continue; 
             }
             int write_stat;
-            if ((write_stat = write(localSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
+            if ((write_stat = write(mainSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
             {
                 perror("Write Instruction error");
                 exit(1);
             }
 
             char check_exist[BUFF_SIZE] = {'\0'};
-            if ((read(localSocket, check_exist, sizeof(char) * BUFF_SIZE)) < 0)
+            if ((read(mainSocket, check_exist, sizeof(char) * BUFF_SIZE)) < 0)
             {
                 perror("read check_exist error");
                 exit(1);
@@ -165,7 +163,7 @@ int main(int argc, char *argv[])
             //printf("exist msg [%s]\n", check_exist);
             if(check_exist[0] == FILE_EXIST)
             {
-                recv_file(localSocket, filename, CLIENT);
+                recv_file(mainSocket, filename, CLIENT);
                 printf("get %s successfully\n", filename);
             }
             else if(check_exist[0] == FILE_NOT_EXIST)
@@ -181,11 +179,11 @@ int main(int argc, char *argv[])
 
             if(file_ok(filename) == false){
                 printf("Command format error\n");
-                close(localSocket);
+                close(mainSocket);
                 continue; 
             }
             int write_stat;
-            if ((write_stat = write(localSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
+            if ((write_stat = write(mainSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
             {
                 perror("Write Instruction error");
                 exit(1);
@@ -195,10 +193,10 @@ int main(int argc, char *argv[])
             if(exist_msg[0] == '0')
             {
                 printf("The %s doesn’t exist\n", filename);
-                close(localSocket);
+                close(mainSocket);
                 continue;
             }    
-            send_file(filename, localSocket, CLIENT);
+            send_file(filename, mainSocket, CLIENT);
             printf("put %s successfully\n", filename);
 
         }
@@ -206,6 +204,6 @@ int main(int argc, char *argv[])
             printf("Command not found\n");
         }
 end:
-        close(localSocket);
+        close(mainSocket);
     }
 }
