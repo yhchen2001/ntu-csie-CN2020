@@ -107,13 +107,27 @@ int main(int argc, char *argv[])
 
         char ins[BUFF_SIZE] = {'\0'};
         //printf("Enter your instruction\n");
-        scanf("%s", ins);
+        cin.getline(ins, sizeof(char) * BUFF_SIZE);
+        //printf("ins[0] == '0' == %d\n", ins[0] == '\0');
+        if(ins[0] == '\0')
+        {
+            close(localSocket);
+            continue;
+        }
         //printf("Your instruction is %s\n", ins);
         ins[BUFF_SIZE-1] = NAMED;
 
         if(ins[0] == 'l' && ins[1] == 's' && (ins[2] == '\0' || ins[2] == ' '))
         {// ls
             ins[2] = '\0';
+            for(int i = 3; i < MAX_FILENAME; i++)
+            {
+                if(ins[i] != ' ' && ins[i] != '\0' && ins[i] != '\n')
+                {
+                    printf("Command format error\n");
+                    goto end;
+                }
+            }
             int write_stat;
             if ((write_stat = write(localSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
             {
@@ -127,16 +141,14 @@ int main(int argc, char *argv[])
         {
             ins[3] = ' ';
             char filename[BUFF_SIZE] = {'\0'};
-            scanf("%[^\n]", filename); // filename前面會有一個空格
+            for(int off = 0; off <= MAX_FILENAME; off++)
+                filename[off] = ins[off+4];
+
             if(file_ok(filename) == false){
                 printf("Command format error\n");
                 close(localSocket);
                 continue; 
             }
-            //printf("filename is [%s]\n", filename);
-            for(int off = 0; off < MAX_FILENAME; off++)
-                ins[off+4] = filename[off];
-            //printf("whole ins name is : %s\n", ins);
             int write_stat;
             if ((write_stat = write(localSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
             {
@@ -164,17 +176,14 @@ int main(int argc, char *argv[])
         {
             ins[3] = ' ';
             char filename[BUFF_SIZE] = {'\0'};
-            scanf("%[^\n]", filename); // filename前面會有一個空格
-            if( file_ok(filename) == false){
+            for(int off = 0; off <= MAX_FILENAME; off++)
+                filename[off] = ins[off+4];
+
+            if(file_ok(filename) == false){
                 printf("Command format error\n");
                 close(localSocket);
                 continue; 
             }
-            //printf("filename is [%s]\n", filename);
-            for(int off = 0; off < MAX_FILENAME; off++)
-                ins[off+4] = filename[off];
-            
-            //printf("Full instruction is [%s]\n", ins);
             int write_stat;
             if ((write_stat = write(localSocket, ins, sizeof(char) * BUFF_SIZE)) < 0)
             {
@@ -196,7 +205,7 @@ int main(int argc, char *argv[])
         else{
             printf("Command not found\n");
         }
-
+end:
         close(localSocket);
     }
 }

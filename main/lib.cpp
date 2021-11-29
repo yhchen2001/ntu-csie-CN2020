@@ -170,15 +170,12 @@ bool file_ok(char filename[])
         //printf("no file name\n");
         return false;
     }
-    bool spaced = false;
     for(int i = 0; i < MAX_FILENAME; i++)
     {
-        if(spaced && filename[i] == ' '){
+        if(filename[i] == ' '){
             //printf("more then one file\n");
             return false;
         }
-        if(filename[i] == ' ')
-            spaced = true;
     } 
     if(filename[0] == ' ')
     {
