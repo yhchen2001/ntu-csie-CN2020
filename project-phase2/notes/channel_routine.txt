@@ -1,0 +1,55 @@
+package main
+
+import (
+	"fmt"
+	"runtime"
+	"sync"
+	//"time"
+)
+
+var wg = sync.WaitGroup{}
+var m = sync.RWMutex{}
+var counter = 0
+
+var doneCh = make(chan struct{})
+var loggerCh = make(chan int, 50)
+
+
+func main(){
+	fmt.Println("Server starting...")
+
+	runtime.GOMAXPROCS(100)
+	
+	go logger()
+
+	doneCh <- struct{}{}
+}
+
+func logger(){
+Loop:
+	for{
+		select{
+			case entry := <- loggerCh:
+				fmt.Println(entry)
+			case <- doneCh:
+				fmt.Println("close logger")
+				break Loop
+			default:
+				fmt.Println("hi")
+		}
+	}
+}
+
+func sayHello(){
+	m.RLock()
+	fmt.Printf("hi %d\n", counter)
+	m.RUnlock()
+	wg.Done()
+}
+
+func add(){
+	m.Lock()
+	counter++
+	m.Unlock()
+	wg.Done()
+}
