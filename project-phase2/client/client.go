@@ -3,19 +3,20 @@ package main
 import (
 	"fmt"
 	"net"
+	//"net/http"
 
 	"./utils"
+	"./transfer"
+	//"./actions"
+
+	//".web"
 )
 
 const(
 	server = "127.0.0.1:8080"
+	homeMsg = "(1) list friends\n(2) Add a friend\n(3) Delete a friend\n(4) Chat\nyour action: "
+	loginMsg = "(1) sign in\n(2) sign up\nyour action: "
 )
-
-func send(conn net.Conn, msg string){
-	utils.Log("msg =", msg)
-	conn.Write([]byte(msg))
-	utils.Log("finish sending [", msg, "]")
-}
 
 func main(){
 
@@ -24,20 +25,49 @@ func main(){
 
 	conn, err := net.DialTCP("tcp4", nil, tcpAddr)
 	utils.CheckErrFatal(err)
+	defer conn.Close()
+
+SigninLoop:	
+	for{
+		fmt.Printf(loginMsg)
+		var msg string
+		fmt.Scanln(&msg)
+		transfer.Send(conn, msg)
+
+		switch msg{
+			case "1" :	
+				if SignIn(conn) == "ok"{
+					fmt.Println("ok msg =", msg)
+					break SigninLoop
+				}
+			case "2" :
+				if SignUp(conn) == "ok"{
+					break SigninLoop
+				}
+			default :
+				fmt.Println("input format wrong")
+		}
+	}
+	fmt.Println("finish logging in")
 
 	for{
-
-		buf := make([]byte, 1024)
-		_, err := conn.Read(buf)
-		
-		if err != nil{
-			utils.Log("error =", err, "connection closing")
-			return
-		}
-
+		fmt.Printf(homeMsg)
 		var msg string
 		fmt.Scanln(&msg)
 
-		send(conn, msg)
+		switch msg{
+			case "1" :
+				ListFriend()
+			case "2" :
+				AddFriend()
+			case "3" :
+				DeleteFriend()
+			case "4" :
+				Chat()
+			default :
+				utils.Log("wrong format choice")
+		}
+		
+		transfer.Send(conn, msg)
 	}
 }

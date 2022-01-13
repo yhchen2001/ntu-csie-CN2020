@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"net"
+
+	"./transfer"
 	"./utils"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -32,28 +36,67 @@ func startServer(){
 		}
 		utils.Log(conn.RemoteAddr().String(), "TCP connection success")
 
-		go handleConn(conn)
+		go handleClient(conn)
 	}
 }
 
-func handleConn(conn net.Conn){
+func handleClient(conn net.Conn){
 
-	utils.Log("Handling connection...")
+	utils.Log("Handling user...")
+	defer conn.Close()
+	var name string
+SignLoop:
+	for{
+		msg := transfer.RecvMsg(conn)
+		utils.Log("Buffer read [", msg, "]")
+		switch msg{
+			case "1" :	
+				if tmpname, _, okMsg := SignIn(conn); okMsg == "ok"{
+					name = tmpname
+					break SignLoop
+				}
+				log.Println("sign in fail")
+			case "2" :
+				if tmpname, _, okMsg := SignUp(conn); okMsg == "ok"{
+					name = tmpname
+					break SignLoop
+				}
+				log.Println("sign up fail")
+			default :
+				fmt.Println("input format wrong")
+		}
+	}
 
-	buf := make([]byte, 1024)
-	crrBuf := make([]byte, 0)
+	fmt.Println("finish logging in, name = ", name)
+
+	defer func(){
+		for i, user := range OnlineUsers{
+			if user.Name == name{
+				RemoveUser(OnlineUsers, i)
+				break
+			}
+		}
+	}()
 
 	for{
-		n, err := conn.Read(buf)
-		
-		if err != nil{
-			utils.Log("error =", err, "connection closing")
-			return
-		}
+		action := transfer.RecvMsg(conn)
 
-		crrBuf = append(crrBuf, buf[:n]...)
-		utils.Log("Buffer read [", string(crrBuf), "]")
-		crrBuf = crrBuf[:0]
+		switch action{
+			case "1":
+				log.Println("Listing friend")
+				ListFriend(conn)
+			case "2":
+				log.Println("Adding a friend")
+				AddFriend(conn)
+			case "3":
+				log.Println("Deleting a friend")
+				DeleteFriend(conn)
+			case "4":
+				log.Println("chat")
+				Chat(conn)
+			default:
+				log.Println("wrong input format")
+		}
 	}
 
 }
