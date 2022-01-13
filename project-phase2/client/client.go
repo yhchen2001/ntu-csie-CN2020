@@ -55,19 +55,22 @@ SigninLoop:
 		var msg string
 		fmt.Scanln(&msg)
 
+		if msg != "1" && msg != "2" && msg != "3" && msg != "4"{
+			fmt.Println("wrong format input")
+			continue
+		}
+
+		transfer.Send(conn, msg)
+
 		switch msg{
 			case "1" :
-				ListFriend()
+				ListFriend(conn)
 			case "2" :
-				AddFriend()
+				AddFriend(conn)
 			case "3" :
-				DeleteFriend()
+				DeleteFriend(conn)
 			case "4" :
-				Chat()
-			default :
-				utils.Log("wrong format choice")
+				Chat(conn)
 		}
-		
-		transfer.Send(conn, msg)
 	}
 }

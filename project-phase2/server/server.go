@@ -70,9 +70,15 @@ SignLoop:
 	fmt.Println("finish logging in, name = ", name)
 
 	defer func(){
+		if len(OnlineUsers) == 1{
+			OnlineUsers = nil
+		}
 		for i, user := range OnlineUsers{
 			if user.Name == name{
-				RemoveUser(OnlineUsers, i)
+				log.Println("onlineusers =", OnlineUsers)
+				OnlineUsers[i] = OnlineUsers[len(OnlineUsers)-1]
+				OnlineUsers = OnlineUsers[:len(OnlineUsers)-1]
+				log.Println("onlineusers after =", OnlineUsers)
 				break
 			}
 		}
@@ -80,20 +86,25 @@ SignLoop:
 
 	for{
 		action := transfer.RecvMsg(conn)
+		log.Println("action =", action)
+		if action == "fail"{
+			log.Println("connection closed")
+			return
+		}
 
 		switch action{
 			case "1":
 				log.Println("Listing friend")
-				ListFriend(conn)
+				ListFriend(conn, name)
 			case "2":
 				log.Println("Adding a friend")
-				AddFriend(conn)
+				AddFriend(conn, name)
 			case "3":
 				log.Println("Deleting a friend")
-				DeleteFriend(conn)
+				DeleteFriend(conn, name)
 			case "4":
 				log.Println("chat")
-				Chat(conn)
+				Chat(conn, name)
 			default:
 				log.Println("wrong input format")
 		}

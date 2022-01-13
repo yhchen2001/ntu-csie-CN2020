@@ -11,13 +11,9 @@ import (
 	"sync"
 )
 
-
-
-
-
-var WriteInfoMutex sync.Mutex
-var ReadInfoMutex sync.Mutex
-var OnlineUsers = make([]User, 100)
+var writeInfoMutex sync.Mutex
+var readInfoMutex sync.Mutex
+var OnlineUsers = make([]User, 0)
 
 type User struct{
 	Name string
@@ -29,11 +25,11 @@ func RemoveUser(slice []User, i int) []User {
 	return slice[:len(slice)-1]
 }
 
-func readUserInfo() []User{
-	ReadInfoMutex.Lock()
-	defer ReadInfoMutex.Unlock()
+func ReadUserInfo() []User{
+	readInfoMutex.Lock()
+	defer readInfoMutex.Unlock()
 
-	userList := make([]User, 100)
+	userList := make([]User, 0)
 	f, err := os.Open("./data/user_info.txt")
 	if err != nil {
 		log.Println("open user_info fail")
@@ -49,7 +45,7 @@ ReadLoop:
 			if err == io.EOF{
 				break ReadLoop
 			}
-			log.Println("read user_info error :", err)
+			continue
 		}
 		log.Printf("%s %s\n", crr_name, crr_pass)
 		userList = append(userList, User{crr_name, crr_pass})
@@ -59,10 +55,10 @@ ReadLoop:
 }
 
 func checkSignIn(name string, pass string) string{
-	WriteInfoMutex.Lock()
-	defer WriteInfoMutex.Unlock()
+	writeInfoMutex.Lock()
+	defer writeInfoMutex.Unlock()
 
-	userList := readUserInfo()
+	userList := ReadUserInfo()
 
 	for _, user := range OnlineUsers{
 		if user.Name == name{
@@ -85,10 +81,10 @@ func checkSignIn(name string, pass string) string{
 }
 
 func checkSignUp(name string, pass string) string{
-	WriteInfoMutex.Lock()
-	defer WriteInfoMutex.Unlock()
+	writeInfoMutex.Lock()
+	defer writeInfoMutex.Unlock()
 
-	userList := readUserInfo()
+	userList := ReadUserInfo()
 
 	for _, user := range userList{
 		if user.Name == name{

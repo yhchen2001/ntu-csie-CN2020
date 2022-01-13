@@ -30,7 +30,8 @@ func RecvMsg(conn net.Conn) string{
 	n, err := conn.Read(buf)
 
 	if err != nil {
-		log.Println("error =", err, "connection closing")
+		log.Println("error =", err, "connection closing~~")
+		return "fail"
 	}
 
 	crrBuf = append(crrBuf, buf[:n]...)
