@@ -18,6 +18,7 @@ var OnlineUsers = make([]User, 0)
 type User struct{
 	Name string
 	Pass string
+	Conn net.Conn
 }
 
 func RemoveUser(slice []User, i int) []User {
@@ -31,6 +32,7 @@ func ReadUserInfo() []User{
 
 	userList := make([]User, 0)
 	f, err := os.Open("./data/user_info.txt")
+	defer f.Close()
 	if err != nil {
 		log.Println("open user_info fail")
 	}
@@ -48,13 +50,13 @@ ReadLoop:
 			continue
 		}
 		log.Printf("%s %s\n", crr_name, crr_pass)
-		userList = append(userList, User{crr_name, crr_pass})
+		userList = append(userList, User{crr_name, crr_pass, nil})
 	}
 	f.Close()
 	return userList
 }
 
-func checkSignIn(name string, pass string) string{
+func checkSignIn(conn net.Conn, name string, pass string) string{
 	writeInfoMutex.Lock()
 	defer writeInfoMutex.Unlock()
 
@@ -72,7 +74,7 @@ func checkSignIn(name string, pass string) string{
 	for _, user := range userList{
 		log.Println("name pass = ", user.Name, user.Pass)
 		if user.Name == name && user.Pass == pass{
-			OnlineUsers = append(OnlineUsers, User{name, pass})
+			OnlineUsers = append(OnlineUsers, User{name, pass, conn})
 			return "ok"
 		}
 	}
@@ -80,7 +82,7 @@ func checkSignIn(name string, pass string) string{
 	return "fail"
 }
 
-func checkSignUp(name string, pass string) string{
+func checkSignUp(conn net.Conn, name string, pass string) string{
 	writeInfoMutex.Lock()
 	defer writeInfoMutex.Unlock()
 
@@ -94,12 +96,13 @@ func checkSignUp(name string, pass string) string{
 
 	log.Println("start writing")
 	wrF, _ := os.OpenFile("./data/user_info.txt", os.O_APPEND|os.O_WRONLY|os.O_SYNC, 0644)
+	defer wrF.Close()
 	if _, err := wrF.WriteString(name + " " + pass + "\n"); err != nil {
 		log.Println("write error", err)
 	}
 	log.Println("finish checking")
 
-	OnlineUsers = append(OnlineUsers, User{name, pass})
+	OnlineUsers = append(OnlineUsers, User{name, pass, conn})
 	return "ok"
 }
 
@@ -111,7 +114,7 @@ func SignIn(conn net.Conn) (string, string, string){
 	password := transfer.RecvMsg(conn)
 	log.Println(password)
 
-	okMsg := checkSignIn(name, password)
+	okMsg := checkSignIn(conn, name, password)
 
 	log.Println("start sending ", okMsg)
 	transfer.Send(conn, okMsg)
@@ -124,7 +127,7 @@ func SignUp(conn net.Conn) (string, string, string) {
 	name := transfer.RecvMsg(conn)
 	password := transfer.RecvMsg(conn)
 
-	okMsg := checkSignUp(name, password)
+	okMsg := checkSignUp(conn, name, password)
 
 	log.Println("start sending ", okMsg)
 	transfer.Send(conn, okMsg)

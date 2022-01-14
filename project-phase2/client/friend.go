@@ -12,8 +12,8 @@ import (
 	"./transfer"
 )
 
-func receiveStringSlice(conn net.Conn) []string{
-	msg := transfer.RecvMsg(conn)
+func ReceiveStringSlice(conn net.Conn) []string{
+	msg, _ := transfer.RecvMsg(conn)
 
 	if msg == "-1" {
 		return make([]string, 0)
@@ -23,10 +23,30 @@ func receiveStringSlice(conn net.Conn) []string{
 	return sl
 }
 
+func ScanAndCheckChoice(list []string) (int){
+	var tarName string
+	var tarNum int
+	for{
+		fmt.Scanf("%s", &tarName)
+		i, err := strconv.Atoi(tarName)
+		tarNum = i
+		if err != nil {
+			fmt.Println("Input format wrong")
+			continue
+		}
+		if tarNum >= len(list) || tarNum < 0{
+			fmt.Printf("Number not available")
+			continue
+		}
+		break
+	}
+	return tarNum
+}
+
 func AddFriend(conn net.Conn){
 	log.Println("adding friend in func")
 
-	notFriendList := receiveStringSlice(conn)
+	notFriendList := ReceiveStringSlice(conn)
 	if len(notFriendList) == 0{
 		fmt.Println("you don't have friend to delete")
 		return
@@ -38,25 +58,15 @@ func AddFriend(conn net.Conn){
 	}
 	fmt.Printf("choose a friend to add :")
 	
-	var tarNotFriend string
-	var tarNum int
-	for{
-		fmt.Scanf("%s", &tarNotFriend)
-		i, err := strconv.Atoi(tarNotFriend)
-		tarNum = i
-		if err != nil {
-			fmt.Println("Input format wrong")
-			continue
-		}
-		break
-	}
-	fmt.Println("tarnotfriend = " ,tarNotFriend)
+	tarNum := ScanAndCheckChoice(notFriendList)
+	
+	fmt.Println("target = " ,notFriendList[tarNum])
 	transfer.Send(conn, notFriendList[tarNum])	
 }
 
 func DeleteFriend(conn net.Conn){
 	log.Println("deleting friend in func")
-	friendList := receiveStringSlice(conn)
+	friendList := ReceiveStringSlice(conn)
 
 	if len(friendList) == 0{
 		fmt.Println("you don't have friend to delete")
@@ -69,19 +79,8 @@ func DeleteFriend(conn net.Conn){
 	}
 	fmt.Printf("choose a friend to delete :")	
 	
-	var tarNotFriend string
-	var tarNum int
-	for{
-		fmt.Scanf("%s", &tarNotFriend)
-		i, err := strconv.Atoi(tarNotFriend)
-		tarNum = i
-		if err != nil {
-			fmt.Println("Input format wrong")
-			continue
-		}
-		break
-	}
-	fmt.Println("tarnotfriend = " ,tarNotFriend)
+	tarNum := ScanAndCheckChoice(friendList)
+	fmt.Println("target = " ,friendList[tarNum])
 	transfer.Send(conn, friendList[tarNum])
 }
 
@@ -89,7 +88,7 @@ func ListFriend(conn net.Conn){
 	log.Println("listing friend in func")
 
 
-	friendList := receiveStringSlice(conn)
+	friendList := ReceiveStringSlice(conn)
 
 	fmt.Println("your friends are")
 	for i, friend := range(friendList){

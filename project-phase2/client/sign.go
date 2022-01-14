@@ -25,7 +25,7 @@ func SignIn(conn net.Conn) string{
 
 
 	fmt.Println("start recieving ok msg ")
-	msg := transfer.RecvMsg(conn)
+	msg, _ := transfer.RecvMsg(conn)
 	fmt.Println("end recieving ok msg ")
 
 	switch msg {
@@ -55,7 +55,7 @@ func SignUp(conn net.Conn) string {
 	transfer.Send(conn, password)
 
 
-	msg := transfer.RecvMsg(conn)
+	msg, _ := transfer.RecvMsg(conn)
 
 	switch msg {
 	case "ok":
