@@ -13,3 +13,5 @@ q: hi
 q: hi
 q: hi
 q: exit
+name: hi
+q: hello
