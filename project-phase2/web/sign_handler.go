@@ -49,7 +49,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		switch string(msg) {
 		case "ok":
 			fmt.Fprintln(w, "sign in success")
-			backHome(w)
+			BackHome(w)
 		case "fail":
 			fmt.Fprintln(w, "username or password incorrect, please try again")
 

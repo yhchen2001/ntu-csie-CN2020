@@ -13,6 +13,8 @@ import (
 	//"io"
 	"log"
 	"net"
+	"net/http"
+	"strconv"
 	//"os"
 )
 
@@ -40,7 +42,53 @@ func Chat(conn net.Conn) {
 	startChat(conn)
 }
 
-func startChat(conn net.Conn){
+func WebChatChooseFriend_backup(conn net.Conn, w http.ResponseWriter, friendCount *int, tarName * string) {
+	log.Println("start recieving friend")
+	
+	friendList := ReceiveStringSlice(conn)
+	log.Println("end recieving friend")
+	if len(friendList) == 0 {
+		fmt.Fprintln(w, "you have no friends to chat with<br>")
+		return
+	}
+
+	fmt.Fprintln(w, "<h3>choose a friends to chat with</h3><br>")
+	fmt.Fprintln(w, "<form method=\"POST\">")
+	*friendCount = len(friendList)
+	for i, friend := range friendList {
+		fmt.Fprintf(w, "<input type=\"submit\" value=\"%s\" name=\"%d\"><br>", friend, i)
+	}
+	fmt.Fprintln(w, "</form>")
+}
+
+var GlobalChatFriendList []string = make([]string, 0)
+var GlobalFriendCount int
+
+func WebChatChooseFriend(conn net.Conn, w http.ResponseWriter){
+	log.Println("choose friend in func")
+
+	fmt.Fprintf(w, "<h2>choose a friend to chat</h2>")
+	GlobalChatFriendList = ReceiveStringSlice(conn)
+	GlobalFriendCount = len(GlobalChatFriendList)
+/*
+	if len(GlobalChatFriendList) == 0{
+		fmt.Fprintln(w, "you don't have friend to chat")
+		return
+	}
+*/
+	fmt.Fprintln(w, "<form method=\"POST\">")
+	for i, friend := range GlobalChatFriendList{	
+		fmt.Fprintf(w, "<input type=\"submit\" value=\"%s\" name=\"%s\"><br>", friend, strconv.Itoa(i))
+	}
+	//fmt.Fprintln(w, "<input type=\"text\" value=\"rand\" name=\"6\"><br>")
+	fmt.Fprintln(w, "</form>")	
+}
+
+func WebChatChooseFriendPost(conn net.Conn, w http.ResponseWriter, friendCount *int){
+
+}
+
+func WebStartChat(conn net.Conn){
 	log.Println("starts chating, type exit() to quit")
 	w := bufio.NewWriterSize(conn, 1024)
 	r := bufio.NewReader(os.Stdin)
@@ -75,6 +123,10 @@ func startChat(conn net.Conn){
 	}
 }
 
+func startChat(conn net.Conn){
+	log.Println("none")
+}
+
 func monitor(conn net.Conn, exit * bool, finish * bool){
 	log.Println("start monitoring")
 	for !(*exit) {
@@ -88,7 +140,7 @@ func monitor(conn net.Conn, exit * bool, finish * bool){
 	*finish = true
 }
 
-func displayHistory(conn net.Conn) {
+func WebDisplayHistory(conn net.Conn, w http.ResponseWriter) {
 
 	log.Println("before read")
 	r := bufio.NewReaderSize(conn, 1024)
@@ -96,7 +148,7 @@ func displayHistory(conn net.Conn) {
 	for{
 		//log.Println("start")
 		line, err := r.ReadString('\n')
-		fmt.Print(line)
+		fmt.Fprintln(w, line, "<br>")
 
 		if err != nil{
 			log.Println("display err : ", err)
@@ -107,4 +159,9 @@ func displayHistory(conn net.Conn) {
 			break;
 		}
 	}
+}
+
+func displayHistory(conn net.Conn) {
+
+	log.Println("none")
 }

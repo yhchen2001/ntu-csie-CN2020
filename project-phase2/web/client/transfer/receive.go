@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"bufio"
 )
 
 func Recv(conn net.Conn) {
@@ -28,8 +29,10 @@ func RecvMsg(conn net.Conn) (string, error) {
 	buf := make([]byte, 1024)
 	crrBuf := make([]byte, 0)
 	log.Println("30")
-	n, err := conn.Read(buf)
+	r := bufio.NewReader(conn)
+	n, err := r.Read(buf)
 	log.Println("32")
+	log.Println(n, "bytes read")
 	if err != nil {
 		log.Println("error =", err, "connection closing")
 		return "", io.EOF
