@@ -8,8 +8,25 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type animal interface{
+    eat()
+}
+
+type dog struct{
+    name string
+}
+
+func (*dog) eat (){
+    log.Println("dog eat")
+}
+
+
+
 func main(){
 	db, err := sql.Open("mysql", "yhchen2001:66Cyh90523@tcp(127.0.0.1:3306)/server")
+
+    d := dog{"dot"}
+    d.eat()
 
     // if there is an error opening the connection, handle it
     if err != nil {

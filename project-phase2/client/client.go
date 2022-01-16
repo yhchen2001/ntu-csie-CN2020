@@ -14,7 +14,7 @@ import (
 
 const(
 	server = "127.0.0.1:8080"
-	homeMsg = "(1) list friends\n(2) Add a friend\n(3) Delete a friend\n(4) Chat\nyour action: "
+	homeMsg = "(1) List friends\n(2) Add a friend\n(3) Delete a friend\n(4) Chat\n(5) Change password\nyour action: "
 	loginMsg = "(1) sign in\n(2) sign up\nyour action: "
 )
 
@@ -55,7 +55,7 @@ SigninLoop:
 		var msg string
 		fmt.Scanln(&msg)
 
-		if msg != "1" && msg != "2" && msg != "3" && msg != "4"{
+		if msg != "1" && msg != "2" && msg != "3" && msg != "4" && msg != "5"{
 			fmt.Println("wrong format input")
 			continue
 		}
@@ -71,6 +71,8 @@ SigninLoop:
 				DeleteFriend(conn)
 			case "4" :
 				Chat(conn)
+			case "5" :
+				ChangePassword(conn)
 		}
 	}
 }

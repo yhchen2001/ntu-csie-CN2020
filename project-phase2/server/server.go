@@ -113,8 +113,9 @@ SignLoop:
 			case "4":
 				log.Println("chat")
 				Chat(conn, name)
-			default:
-				log.Println("wrong input format")
+			case "5":
+				log.Println("anonymous chat")
+				ChangePassword(conn, name)
 		}
 	}
 

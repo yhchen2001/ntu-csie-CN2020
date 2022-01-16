@@ -1,12 +1,5 @@
-name p
-name2 p
-name4 p
-usr1 p
-name5 p
-usr usr
-p p
-p2 p
-p3 p
-usr3 u
-q q
 w w
+q q
+e e
+r r
+a b

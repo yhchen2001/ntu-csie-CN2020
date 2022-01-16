@@ -44,6 +44,7 @@ func main() {
 	http.HandleFunc("/addfriend", addFriendHandler)
 	http.HandleFunc("/deletefriend", deleteFriendHandler)
 	http.HandleFunc("/signin", SignInHandler)
+	http.HandleFunc("/signup", SignUpHandler)
 	http.HandleFunc("/chooseChatFriend", ChooseChatFriendHandler)
 	http.HandleFunc("/chatroom", ChatRoomHandler)
 	

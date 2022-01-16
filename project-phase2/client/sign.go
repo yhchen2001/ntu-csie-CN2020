@@ -69,3 +69,13 @@ func SignUp(conn net.Conn) string {
 
 	return "fail"
 }
+
+func ChangePassword(conn net.Conn){
+	password := ""
+
+	fmt.Println("enter your new password (<30 word): ")
+	fmt.Scanln(&password)
+	transfer.Send(conn, password)
+
+	log.Println("finish sending new password =", password)
+}
