@@ -1,2 +1,0 @@
-name: hi
-p2: hellow to  you

@@ -81,6 +81,7 @@ func monitor(conn net.Conn, exit * bool, finish * bool){
 		msg,err := transfer.RecvMsg(conn)
 		if err != nil{
 			log.Println("monitor read error, break :", err)
+			break
 		}
 		fmt.Print(msg)
 	}

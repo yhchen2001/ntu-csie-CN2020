@@ -1,4 +1,0 @@
-q: hi
-q: hi
-q: jfsi
-q: siofpsd

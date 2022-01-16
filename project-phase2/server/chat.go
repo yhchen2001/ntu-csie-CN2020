@@ -23,12 +23,17 @@ func Chat(conn net.Conn, myName string) {
 	log.Println("listing friend in func")
 
 	friendList := ReadFriendList(myName)
+	//time.Sleep(time.Second * 1)
+	log.Println("connection = ", conn)
 	SendStringSlice(conn, friendList)
+	log.Println("chat finish sending friendlist = ", friendList)
 
 	if len(friendList) == 0 {
 		log.Println("no friend, return")
 		return
 	}
+	//unknown := transfer.RecvMsg(conn)
+	//log.Println("this is =", unknown)
 
 	friendName := transfer.RecvMsg(conn)
 	log.Println("friend =", friendName, "is going to chat")
@@ -71,7 +76,7 @@ func getPath(myName string, friendName string) string {
 }
 
 func appendMsg(path string, line string){
-	wrF, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_SYNC, 0644)
+	wrF, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_SYNC|os.O_CREATE, 0644)
 	_, _ = wrF.Seek(0, 1)
 	if err != nil {
 		log.Println("write history file open err :", err)
@@ -84,7 +89,7 @@ func appendMsg(path string, line string){
 
 func monitor(conn net.Conn, myName string, friendName string, exit *bool){
 	path := getPath(myName, friendName)
-	f, err := os.Open(path)
+	f, err := os.OpenFile(path, os.O_SYNC|os.O_RDONLY|os.O_CREATE, 0644)
 	defer f.Close()
 	if err != nil{
 		log.Println("monitor open file fail error: ", err)
@@ -139,8 +144,9 @@ func startChat(conn net.Conn, myName string, friendName string) {
 			exit = true
 			break
 		}
-		if line == "exit()\n" {
+		if line == "exit()\n" || line == "exit()" {
 			log.Println("exit, return")
+			time.Sleep(time.Millisecond * 50)
 			transfer.Send(conn, "exit()\n")
 			exit = true
 			return
@@ -161,6 +167,9 @@ func sendHistory(conn net.Conn, myName string, friendName string) {
 	path := getPath(myName, friendName)
 	log.Println("path ==", path)
 
+	if err := os.MkdirAll("./data/chat_history" , os.ModePerm); err != nil {
+		log.Println("mk history err: ", err)
+	}
 	f, err := os.OpenFile(path, os.O_SYNC|os.O_APPEND|os.O_CREATE, 0644)
 	defer f.Close()
 	log.Println("err file:", err)

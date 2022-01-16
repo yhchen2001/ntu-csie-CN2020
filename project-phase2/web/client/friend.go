@@ -136,12 +136,12 @@ func WebListFriend(conn net.Conn, w http.ResponseWriter){
 	log.Println("listing friend in func")
 
 	friendList := ReceiveStringSlice(conn)
+	log.Println("below, friendList =", friendList)
 
 	for i, friend := range(friendList){
 		fmt.Fprintf(w, "(%d) %s<br>", i, friend)
 	}
 	fmt.Println("<br>")
-
 }
 
 func ListFriend(conn net.Conn){

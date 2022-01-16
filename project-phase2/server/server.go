@@ -43,11 +43,19 @@ func startServer(){
 func handleClient(conn net.Conn){
 
 	utils.Log("Handling user...")
+	log.Println("connection = ", conn)
 	defer conn.Close()
 	var name string
 SignLoop:
 	for{
 		msg := transfer.RecvMsg(conn)
+
+		log.Println("action =", msg)
+		if msg == "fail"{
+			log.Println("connection closed")
+			return
+		}
+		
 		utils.Log("Buffer read [", msg, "]")
 		switch msg{
 			case "1" :	
