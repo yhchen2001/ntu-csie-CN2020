@@ -47,6 +47,8 @@ func main() {
 	http.HandleFunc("/signup", SignUpHandler)
 	http.HandleFunc("/chooseChatFriend", ChooseChatFriendHandler)
 	http.HandleFunc("/chatroom", ChatRoomHandler)
+	http.HandleFunc("/profile", ProfileHandler)
+	http.HandleFunc("/changePassword", ChangePasswordHandler)
 	
 
 	fileServer := http.FileServer(http.Dir("./static"))

@@ -63,7 +63,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SignUpHandler(w http.ResponseWriter, r * http.Request){
+func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintln(w, "<h2>signing up</h2>")
 
@@ -105,12 +105,47 @@ func SignUpHandler(w http.ResponseWriter, r * http.Request){
 		case "fail":
 			fmt.Fprintln(w, "username or password incorrect, please try again")
 
-			fmt.Fprintf(w, "<form action=\"signin\" method=\"GET\">"+
+			fmt.Fprintf(w, "<form action=\"signup\" method=\"GET\">"+
 				"<input type=\"submit\" value=\"try again\">"+
 				"</form>")
 
 		default:
 			log.Printf("server response [%s] is wrong", msg)
 		}
-	}	
+	}
+}
+
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	fmt.Fprintln(w, "<h3>This is your profile</h3>")
+
+	fmt.Fprintf(w, "<form action=\"changePassword\" method=\"GET\">"+
+		"<input type=\"submit\" value=\"Change password\">"+
+		"</form>")
+
+}
+
+func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	if r.Method == "GET" {
+		transfer.Send(Conn, "5")
+		fmt.Fprintln(w, "<form method=\"POST\">"+
+			"enter your new password<input type=\"text\" name=\"newPass\"><br>"+
+			"<input type=\"submit\" value=\"submit\">"+
+			"</form>")
+	}
+	if r.Method == "POST" {
+		r.ParseForm()
+		newPass := r.FormValue("newPass")
+
+		log.Println("new pass = ", newPass)
+		transfer.Send(Conn, newPass)
+
+		log.Println("new pass send finish ", newPass)
+
+		fmt.Fprint(w, "successfully change password to ", newPass, "<br>")
+		BackHome(w)
+	}
 }
